@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Bus raw CSV → long format Parquet 전처리
 - UTF-8 인코딩 (서울 열린데이터광장 최신 API 기준)
@@ -12,8 +13,10 @@ Bus raw CSV → long format Parquet 전처리
                  --num-executors 2 --executor-memory 1g \\
                  preprocess_bus.py
 """
+import codecs
 import functools
 import re
+import sys
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lit
@@ -55,6 +58,12 @@ def parse_hour_col(en_col):
 
 
 def main():
+    # Sandbox HDP의 spark-submit은 Python 2.7로 실행됨.
+    # 기본 stdout이 ASCII로 wrap 되어 있어 한글 print/show 시 UnicodeEncodeError 발생.
+    # UTF-8 writer 로 교체해서 안전하게 출력.
+    if sys.version_info[0] == 2:
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
+
     spark = SparkSession.builder.appName("PreprocessBus").getOrCreate()
 
     df = (spark.read
