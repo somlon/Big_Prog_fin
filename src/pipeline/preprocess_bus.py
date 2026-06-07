@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Bus raw CSV → long format Parquet 전처리
 - UTF-8 인코딩 (서울 열린데이터광장 최신 API 기준)
