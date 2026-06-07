@@ -14,9 +14,17 @@
 --     beeline -u jdbc:hive2://localhost:10000 -n maria_dev -f /tmp/create_tables.hql
 -- ============================================================================
 
+-- ----------------------------------------------------------------------------
+-- Database
+--
+-- LOCATION 절은 의도적으로 지정하지 않음.
+-- HDP Sandbox Ranger 정책 하에서 hive admin user 가 /user/maria_dev/... 같은
+-- 임의 경로에 대한 ALL 권한이 없어 CREATE DATABASE 가 실패하기 때문.
+-- 지정하지 않으면 hive default warehouse 아래에 메타스토어가 만들어지고,
+-- 실제 데이터는 어차피 아래 EXTERNAL TABLE 의 LOCATION 에 그대로 남는다.
+-- ----------------------------------------------------------------------------
 CREATE DATABASE IF NOT EXISTS seoul
-COMMENT '서울시 대중교통 이용 패턴 분석'
-LOCATION '/user/maria_dev/seoul/hive';
+COMMENT '서울시 대중교통 이용 패턴 분석';
 
 USE seoul;
 
