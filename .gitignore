@@ -70,6 +70,10 @@ data/interim/
 !data/sample/**
 !data/README.md
 
+# 좌표 마스터 CSV (소용량, 제출용 동봉)
+!data/coords/
+!data/coords/**
+
 # ===========================
 # Big Data tools
 # ===========================

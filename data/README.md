@@ -14,6 +14,15 @@
 
 - ①②는 `src/ingest/fetch_seoul_data.ipynb` 로 월별 분할 수집 (인증키: `.env` 의 `SEOUL_API_KEY_1`, `SEOUL_API_KEY_2`)
 - ③④는 OpenAPI 에서 CSV 1회 다운로드 후 HDFS 에 직접 적재 (변동 거의 없는 마스터 데이터)
+  - **원본 CSV 를 본 repo `data/coords/` 에 동봉** (총 ~940KB) → 재현 시 API 호출 불필요
+
+### 좌표 CSV 의 HDFS 재적재 방법
+
+```bash
+hdfs dfs -mkdir -p /user/maria_dev/seoul/raw/coords
+hdfs dfs -put data/coords/subway_stations_xy.csv /user/maria_dev/seoul/raw/coords/
+hdfs dfs -put data/coords/bus_stops_xy.csv       /user/maria_dev/seoul/raw/coords/
+```
 
 ## 2. 수집 규모
 
@@ -78,7 +87,7 @@ raw CSV 는 영문 컬럼명이며, 전처리(`src/pipeline/preprocess_subway.py
 > ⚠ raw 데이터 inconsistency: `HR_1` 만 `_NOPE` 접미사, 나머지는 `_TNOPE`
 > → 정규식 `HR_(\d+)_GET_(ON|OFF)_T?NOPE` 로 통합 매칭.
 
-### 4.3 지하철역 좌표 (`coords/subway_stations_xy.csv`)
+### 4.3 지하철역 좌표 (`data/coords/subway_stations_xy.csv`, 784역)
 
 | 컬럼 | 설명 |
 |---|---|
@@ -87,14 +96,17 @@ raw CSV 는 영문 컬럼명이며, 전처리(`src/pipeline/preprocess_subway.py
 | `ROUTE` | 호선명 |
 | `LAT` / `LOT` | 위도 / 경도 |
 
-### 4.4 버스정류장 좌표 (`coords/bus_stops_xy.csv`)
+### 4.4 버스정류장 좌표 (`data/coords/bus_stops_xy.csv`, 11,253정류장)
 
 | 컬럼 | 설명 |
 |---|---|
 | `STOPS_NO` | 표준버스정류장ID (시간대 데이터와 JOIN 키) |
+| `STOPS_NM` | 정류장명 |
 | `NODE_ID` | 노드 ID |
 | `STOPS_TYPE` | 정류장 유형 (분석 시 "한강선착장" 제외) |
 | `XCRD` / `YCRD` | 경도 / 위도 |
+
+> 두 파일 모두 UTF-8 (BOM 포함). HDFS 원본과 byte 동일하게 유지한다 (재현성).
 
 ## 5. 데이터 품질 이슈 (전처리에서 해결)
 
