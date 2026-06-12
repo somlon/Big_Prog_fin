@@ -48,11 +48,15 @@
 ## 4. 실행 방법 (HDP 3.0.1 Sandbox)
 
 ### 4-0. 사전 준비
-HDP Sandbox 에 `maria_dev` 로 SSH 접속 후 UTF-8 환경 설정:
+HDP Sandbox 에 `maria_dev` 로 SSH 접속(포트 2222) 후 UTF-8 환경 설정, repo 준비:
 ```bash
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export HADOOP_CLIENT_OPTS="-Dfile.encoding=UTF-8"
+
+git clone --depth 1 -b code <repo-url>    # 동봉 데이터 포함 약 277MB
+cd BP_clone
+ls data/raw | wc -l                       # 36 이면 정상 (subway 18 + bus 18)
 ```
 
 ### 4-1. HDFS 적재
@@ -64,6 +68,13 @@ hdfs dfs -mkdir -p /user/maria_dev/seoul/raw/subway \
 hdfs dfs -put data/raw/subway_*.csv /user/maria_dev/seoul/raw/subway/
 hdfs dfs -put data/raw/bus_*.csv    /user/maria_dev/seoul/raw/bus/
 hdfs dfs -put data/coords/*.csv     /user/maria_dev/seoul/raw/coords/
+```
+**적재 확인**:
+```bash
+hdfs dfs -du -h /user/maria_dev/seoul/raw
+# 271.6 M  /user/maria_dev/seoul/raw/bus
+# 940.0 K  /user/maria_dev/seoul/raw/coords
+# 4.1 M    /user/maria_dev/seoul/raw/subway
 ```
 
 ### 4-2. Spark 전처리 (CSV → Parquet)
@@ -79,6 +90,9 @@ spark-submit --master yarn --deploy-mode client \
              src/pipeline/preprocess_bus.py
 ```
 → `/user/maria_dev/seoul/processed/{subway,bus}/` 에 년/월 파티션 Parquet 생성
+- 소요 시간(Sandbox 실측): subway 약 5분 30초, bus 약 24분 30초
+- **완료 확인**: `hdfs dfs -du -h /user/maria_dev/seoul/processed` → 합계 약 668.5 MB
+- 단계별 정상 출력 기준·트러블슈팅: [`src/pipeline/README.md`](src/pipeline/README.md)
 
 ### 4-3. 분석 노트북 실행
 Zeppelin(`http://localhost:9995`, 인터프리터 `spark2`) 또는 pyspark 셸에서
@@ -89,12 +103,14 @@ pyspark --master yarn --deploy-mode client --driver-memory 2g
 ```
 - 데이터 경로는 `DATA_BASE` 환경변수로 변경 가능 (기본값 `/user/maria_dev/seoul`)
 - 상세 가이드: [`src/analyze/README.md`](src/analyze/README.md)
+- **정상 실행 기준**: 권역 매칭 500m 394개 / 200m 385개, §1 결과 표 수치 재현, Plotly 차트 6종 출력
 
 ### (선택) 데이터 재수집
 동봉 데이터 대신 직접 수집하려면 `.env` 에 인증키 설정 후 `src/ingest/fetch_seoul_data.ipynb` 실행 (`.env.example` 참조):
 ```bash
 pip install -r requirements.txt
 ```
+- 상세 가이드: [`src/ingest/README.md`](src/ingest/README.md)
 
 ## 5. Repository 구조
 
@@ -107,7 +123,7 @@ BP_clone/
 │   ├── README.md                        # 데이터 출처·스키마·재적재 명령
 │   ├── raw/                             # 월별 시간대 CSV 36개 (동봉)
 │   └── coords/                          # 좌표 마스터 CSV 2개 (동봉)
-└── src/
+└── src/                                 # 디렉토리별 README.md = 단계별 실행 가이드
     ├── ingest/fetch_seoul_data.ipynb    # OpenAPI 분할 수집
     ├── pipeline/preprocess_subway.py    # Spark 전처리 (지하철)
     ├── pipeline/preprocess_bus.py       # Spark 전처리 (버스)
