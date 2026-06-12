@@ -1,7 +1,13 @@
 # `data/` — 데이터 출처 및 스키마
 
-대용량 raw 데이터는 `.gitignore` 로 제외한다 (`data/raw/`, `data/processed/`, `*.csv` 등).
-샘플 데이터(100~1000줄)만 `data/sample/` 에 커밋을 허용한다.
+**제출·재현용으로 수집 원본 CSV 전체를 repo 에 동봉한다** (API 인증키 대신 데이터 제출):
+
+| 디렉토리 | 내용 | 용량 |
+|---|---|---|
+| `data/raw/` | 시간대별 승하차 CSV 36개 (subway 18 + bus 18, 2024.12~2026.05) | ~278 MB |
+| `data/coords/` | 역·정류장 좌표 마스터 CSV 2개 | ~1 MB |
+
+전처리 산출물(`data/processed/`, Parquet)은 `.gitignore` 유지 — `src/pipeline/` 스크립트로 재생성한다.
 
 ## 1. 데이터 출처 (서울 열린데이터광장 OpenAPI 4종)
 
@@ -13,15 +19,19 @@
 | 4 | 버스정류장 위치 (정류장 좌표) | `busStopLocationXyInfo` | [OA-15067](https://data.seoul.go.kr/dataList/OA-15067/S/1/datasetView.do) | 정류장 위경도 (권역 매칭) |
 
 - ①②는 `src/ingest/fetch_seoul_data.ipynb` 로 월별 분할 수집 (인증키: `.env` 의 `SEOUL_API_KEY_1`, `SEOUL_API_KEY_2`)
-- ③④는 OpenAPI 에서 CSV 1회 다운로드 후 HDFS 에 직접 적재 (변동 거의 없는 마스터 데이터)
-  - **원본 CSV 를 본 repo `data/coords/` 에 동봉** (총 ~940KB) → 재현 시 API 호출 불필요
+  - **수집 결과 CSV 를 `data/raw/` 에 동봉** → 재현 시 API 키 발급 불필요
+- ③④는 OpenAPI 에서 CSV 1회 다운로드 (변동 거의 없는 마스터 데이터)
+  - **원본 CSV 를 `data/coords/` 에 동봉**
 
-### 좌표 CSV 의 HDFS 재적재 방법
+### HDFS 재적재 방법 (repo → Sandbox HDFS)
 
 ```bash
-hdfs dfs -mkdir -p /user/maria_dev/seoul/raw/coords
-hdfs dfs -put data/coords/subway_stations_xy.csv /user/maria_dev/seoul/raw/coords/
-hdfs dfs -put data/coords/bus_stops_xy.csv       /user/maria_dev/seoul/raw/coords/
+hdfs dfs -mkdir -p /user/maria_dev/seoul/raw/subway \
+                   /user/maria_dev/seoul/raw/bus \
+                   /user/maria_dev/seoul/raw/coords
+hdfs dfs -put data/raw/subway_*.csv /user/maria_dev/seoul/raw/subway/
+hdfs dfs -put data/raw/bus_*.csv    /user/maria_dev/seoul/raw/bus/
+hdfs dfs -put data/coords/*.csv     /user/maria_dev/seoul/raw/coords/
 ```
 
 ## 2. 수집 규모
