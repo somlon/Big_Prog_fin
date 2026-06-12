@@ -1,24 +1,15 @@
 # `src/analyze/` — 분석 노트북
 
-본 디렉토리는 **Q1/Q2/Q3** 분석과 **시각화** 를 담은 노트북·스크립트를 보관한다.
+본 디렉토리는 **Q1/Q2/Q3** 분석과 **시각화** 를 담은 노트북을 보관한다.
 
 ## 파일
 
 | 파일 | 역할 |
 |---|---|
 | `q1_q2_q3_analysis.ipynb` | **Sandbox 용** — 500m 와 200m 두 권역에서 Q1/Q2/Q3 분석 + Plotly 시각화 (64셀) |
-| `_build_notebook.py` | 위 노트북을 생성하는 단일 소스 스크립트 (셀 추가·수정 시 사용) |
-| `q1_q2_q3_analysis_local.ipynb` | **로컬 PySpark/Jupyter 용** — Sandbox 노트북 + DATA_BASE 자동 감지 + Folium 지도 시각화 §13 (72셀) |
-| `_build_notebook_local.py` | 위 노트북 생성 스크립트 (`_build_notebook.py` 의 cells 를 import 한 뒤 셀 0/1/2/4/6 교체 + §13 folium 셀 append) |
 | `README.md` | 본 문서 |
 
 ## 실행 환경
-
-### 로컬 PySpark
-```bash
-pip install pyspark==2.4.x pandas plotly
-DATA_BASE=/path/to/local/data jupyter notebook q1_q2_q3_analysis.ipynb
-```
 
 ### Sandbox HDP 3.0
 ```bash
@@ -56,20 +47,3 @@ pyspark --master yarn --deploy-mode client --driver-memory 2g
     - Q3 Peak 집중도 비교
     - Q3 Top-N 지하철역 / 버스정류장 horizontal bar
 12. **결론**
-13. **Folium 지도 시각화** (로컬 노트북 전용) — 3개 지도
-    - 13-1. Top-15 지하철역 마커 지도 (이용량 = 크기, 호선 = 색상)
-    - 13-2. 200m 권역 매칭 예시 지도 (대표 역 3곳 + 매칭된 버스정류장)
-    - 13-3. 200m 권역별 subway_share 지도 (지하철역 위치에 share 색상 마커)
-
-## 노트북 재생성
-
-### Sandbox 노트북 (`q1_q2_q3_analysis.ipynb`)
-```bash
-python3 src/analyze/_build_notebook.py
-```
-
-### 로컬 노트북 (`q1_q2_q3_analysis_local.ipynb`)
-```bash
-python3 src/analyze/_build_notebook_local.py
-```
-(`_build_notebook.py` 를 내부에서 import 하므로 두 노트북이 함께 재생성됨.)

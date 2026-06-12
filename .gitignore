@@ -51,7 +51,6 @@ htmlcov/
 # ===========================
 # Data files (raw 데이터는 커밋 X)
 # ===========================
-data/raw/
 data/processed/
 data/interim/
 *.csv
@@ -65,10 +64,12 @@ data/interim/
 *.tar
 *.7z
 
-# 단, 샘플 데이터는 커밋 허용
-!data/sample/
-!data/sample/**
+# 단, 제출용 동봉 데이터는 커밋 허용 (API 키 대신 원본 CSV 제출)
 !data/README.md
+!data/raw/
+!data/raw/**
+!data/coords/
+!data/coords/**
 
 # ===========================
 # Big Data tools
